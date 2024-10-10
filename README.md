@@ -6,8 +6,8 @@ you can chat and see your friends without leaving your terminal!
 
 ## Notes
 
-This project is in his very beginning and don't have many of his features implemented yet.
-The following list aims to address desired features:
+This project is in his very beginning and it don't have many features implemented yet.
+The following list aims to address some desired features:
 
 - [] Efficient ASCII image processing;
 - [] ASCII processing integrated with ratatui;

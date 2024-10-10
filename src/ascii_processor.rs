@@ -14,7 +14,7 @@ pub struct AsciiProcessor {
 
 impl AsciiProcessor {
     pub fn new(target_width: i32, target_height: i32) -> Self {
-        let ascii_chars = " ._,:;ox=%#@";
+        let ascii_chars = "              .`'\":^![}{1)(|\\/*tfjrbkhao8#MW&8%B@$";
         let ascii_lookup = (0..=255)
             .map(|intensity| {
                 ascii_chars
@@ -61,7 +61,7 @@ impl AsciiProcessor {
     }
 
     fn print_terminal(&self) {
-        print!("{}[2J", 27 as char);
+        print!("{}[H", 27 as char);
 
         for y in 0..self.target_height {
             for x in 0..self.target_width {

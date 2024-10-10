@@ -5,6 +5,7 @@ use opencv::videoio::{self, VideoCaptureTrait};
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Rect},
+    style::Stylize,
     symbols::border,
     text::Line,
     widgets::{
@@ -97,7 +98,7 @@ impl Widget for &View {
             .border_set(border::THICK);
 
         Paragraph::new(BANNER.to_string())
-            .centered()
+            .centered()            
             .block(block)
             .render(area, buf);
     }
@@ -112,4 +113,7 @@ const BANNER: &str = "
 ██║  ██║╚██████╔╝╚██████╔╝██║ ╚═╝ ██║
 ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝
                                      
+
+Welcome to room, here you can chat and see your friends 
+without leaving the terminal!
 ";

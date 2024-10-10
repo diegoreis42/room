@@ -40,7 +40,7 @@ impl AsciiProcessor {
     }
 
     fn process_frame(&mut self) {
-        //
+        
         imgproc::cvt_color(
             &self.frame,
             &mut self.gray_frame,
@@ -62,7 +62,7 @@ impl AsciiProcessor {
 
     fn print_terminal(&self) {
         print!("{}[H", 27 as char);
-        
+
         for y in 0..self.target_height {
             for x in 0..self.target_width {
                 let intensity = self.frame.at_2d::<u8>(y, x).unwrap();

@@ -14,7 +14,7 @@ pub struct AsciiProcessor {
 
 impl AsciiProcessor {
     pub fn new(target_width: i32, target_height: i32) -> Self {
-        let ascii_chars = " .`'\":^!i><~+_-?][}{1)(|\\/*tfjrxnuvczXYUJCLQ0OZmwqpdbkhao8#MW&8%B@$";
+        let ascii_chars = "              .`'\":^![}{1)(|\\/*tfjrbkhao8#MW&8%B@$";
         let ascii_lookup = (0..=255)
             .map(|intensity| {
                 ascii_chars

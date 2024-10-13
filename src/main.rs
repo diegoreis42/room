@@ -1,13 +1,10 @@
-mod ascii_processor;
-mod view;
-
 use std::io;
 
-use view::View;
-
+use view::banner::Banner;
+mod view;
 fn main() -> io::Result<()> {
     let mut terminal = ratatui::init();
-    let app_result = View::default().run(&mut terminal);
+    let app_result = Banner::default().run(&mut terminal);
     ratatui::restore();
     app_result
 }

@@ -59,10 +59,7 @@ impl AsciiProcessor {
         .expect("Failed to resize the frame");
     }
 
-
     fn render_frame(&self) -> String {
-        print!("{}[H", 27 as char);
-
         let mut frame = String::new();
 
         for y in 0..self.target_height {
@@ -71,6 +68,7 @@ impl AsciiProcessor {
                 let ascii_char = self.ascii_lookup[*intensity as usize];
                 frame.push(ascii_char);
             }
+            frame.push('\n');
         }
 
         frame

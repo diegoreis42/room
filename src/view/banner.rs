@@ -36,17 +36,25 @@ impl Banner {
     fn handle_events(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         if let Event::Key(key_event) = event::read()? {
             if key_event.kind == KeyEventKind::Press {
-                self.handle_key_event(key_event, terminal);
+                self.handle_key_event(key_event, terminal)?;
             }
         }
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent, terminal: &mut DefaultTerminal) {
+    fn handle_key_event(
+        &mut self,
+        key_event: KeyEvent,
+        terminal: &mut DefaultTerminal,
+    ) -> io::Result<()> {
         match key_event.code {
-            KeyCode::Char('q') => self.exit(),
-            KeyCode::Char('r') => App::default().start_app(terminal),
-            _ => {}
+            KeyCode::Char('q') => Ok(self.exit()),
+            KeyCode::Char('r') => {
+                let mut app = App::new().unwrap();
+
+                app.start_app(terminal)
+            }
+            _ => Ok(()),
         }
     }
 

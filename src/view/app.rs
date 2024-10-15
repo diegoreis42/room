@@ -1,88 +1,72 @@
-use std::{io, thread::sleep, time::Duration};
-
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use opencv::videoio::{self, VideoCaptureTrait};
-use ratatui::{
-    widgets::{Paragraph, Widget},
-    DefaultTerminal, Frame,
+use crossterm::event::{self, Event, KeyCode};
+use opencv::videoio::{self, VideoCapture, VideoCaptureTrait};
+use ratatui::{layout::Alignment, widgets::Paragraph, DefaultTerminal, Frame};
+use std::{
+    io,
+    time::{Duration, Instant},
 };
 
 use super::ascii_processor::AsciiProcessor;
 
-#[derive(Default)]
 pub struct App {
     frame: String,
     exit: bool,
+    camera: VideoCapture,
+    ascii_processor: AsciiProcessor,
+    last_update: Instant,
 }
 
 impl App {
-    pub fn start_app(&mut self, terminal: &mut DefaultTerminal) {
+    pub fn new() -> io::Result<Self> {
+        let camera = VideoCapture::new(0, videoio::CAP_ANY)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        let ascii_processor = AsciiProcessor::new(80, 40); 
+
+        Ok(Self {
+            frame: String::new(),
+            exit: false,
+            camera,
+            ascii_processor,
+            last_update: Instant::now(),
+        })
+    }
+
+    pub fn start_app(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        terminal.clear()?;
         while !self.exit {
-            terminal.draw(|frame| self.draw(frame)).unwrap();
-            self.handle_events(terminal);
-        }
-    }
-
-    fn draw(&mut self, frame: &mut Frame) {
-        let mut cam =
-            videoio::VideoCapture::new(0, videoio::CAP_ANY).expect("Failed to get video capture");
-
-        let mut ascii_processor = AsciiProcessor::new(100, 100);
-
-        loop {
-            if let Err(e) = cam.read(&mut ascii_processor.frame) {
-                eprintln!("Failed to capture frame: {}", e);
-                break;
+            if self.last_update.elapsed() >= Duration::from_millis(33) {
+                self.update_frame()?;
+                self.last_update = Instant::now();
             }
 
-            self.frame = ascii_processor.process();
-            frame.render_widget(self.clone(), frame.area());
+            terminal.draw(|frame| self.draw(frame))?;
 
-            sleep(Duration::from_millis(33));
-
-            if event::poll(Duration::from_millis(100)).unwrap_or(false) {
-                if let Event::Key(KeyEvent {
-                    code: KeyCode::Char('q'),
-                    ..
-                }) = event::read().unwrap()
-                {
-                    break;
-                }
+            if event::poll(Duration::from_millis(1))? {
+                self.handle_event()?;
             }
         }
+        Ok(())
     }
 
-    fn handle_events(&mut self, terminal: &mut DefaultTerminal) {
-        if let Event::Key(key_event) = event::read().unwrap() {
-            if key_event.kind == KeyEventKind::Press {
-                self.handle_key_event(key_event, terminal);
+    fn update_frame(&mut self) -> io::Result<()> {
+        self.camera
+            .read(&mut self.ascii_processor.frame)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        self.frame = self.ascii_processor.process();
+        Ok(())
+    }
+
+    fn draw(&self, frame: &mut Frame) {
+        let paragraph = Paragraph::new(self.frame.clone()).alignment(Alignment::Center);
+        frame.render_widget(paragraph, frame.area());
+    }
+
+    fn handle_event(&mut self) -> io::Result<()> {
+        if let Event::Key(key) = event::read()? {
+            if key.code == KeyCode::Char('q') {
+                self.exit = true;
             }
         }
-    }
-
-    fn handle_key_event(&mut self, key_event: KeyEvent, terminal: &mut DefaultTerminal) {
-        match key_event.code {
-            KeyCode::Char('q') => self.exit(),
-            _ => {}
-        }
-    }
-
-    fn exit(&mut self) {
-        self.exit = true;
-    }
-}
-
-impl Widget for App {
-    fn render(self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
-        Paragraph::new(self.frame).centered().render(area, buf);
-    }
-}
-
-impl Clone for App {
-    fn clone(&self) -> Self {
-        Self {
-            frame: self.frame.clone(),
-            exit: self.exit.clone(),
-        }
+        Ok(())
     }
 }

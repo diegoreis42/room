@@ -34,13 +34,12 @@ impl AsciiProcessor {
         }
     }
 
-    pub fn process(&mut self) {
+    pub fn process(&mut self) -> String {
         self.process_frame();
-        self.print_terminal();
+        self.render_frame()
     }
 
     fn process_frame(&mut self) {
-        //
         imgproc::cvt_color(
             &self.frame,
             &mut self.gray_frame,
@@ -60,16 +59,18 @@ impl AsciiProcessor {
         .expect("Failed to resize the frame");
     }
 
-    fn print_terminal(&self) {
-        print!("{}[H", 27 as char);
+    fn render_frame(&self) -> String {
+        let mut frame = String::new();
 
         for y in 0..self.target_height {
             for x in 0..self.target_width {
                 let intensity = self.frame.at_2d::<u8>(y, x).unwrap();
                 let ascii_char = self.ascii_lookup[*intensity as usize];
-                print!("{}", ascii_char);
+                frame.push(ascii_char);
             }
-            println!();
+            frame.push('\n');
         }
+
+        frame
     }
 }

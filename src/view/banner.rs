@@ -13,7 +13,7 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
-use super::app::App;
+use crate::app::camera_engine::CameraEngine;
 
 #[derive(Debug, Default)]
 pub struct Banner {
@@ -49,8 +49,9 @@ impl Banner {
     ) -> io::Result<()> {
         match key_event.code {
             KeyCode::Char('q') => Ok(self.exit()),
+            KeyCode::Char('e') => Ok(()),
             KeyCode::Char('r') => {
-                let mut app = App::new().unwrap();
+                let mut app = CameraEngine::new().unwrap();
 
                 app.start_app(terminal)
             }
@@ -65,7 +66,11 @@ impl Banner {
 
 impl Widget for &Banner {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let instructions = Title::from(Line::from(vec![" (Q)uit ".into(), " (R)un ".into()]));
+        let instructions = Title::from(Line::from(vec![
+            " (Q)uit ".into(),
+            " (R)un ".into(),
+            " (E)dit ".into(),
+        ]));
 
         let block = Block::bordered()
             .title(

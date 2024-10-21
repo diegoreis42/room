@@ -8,7 +8,7 @@ use std::{
 
 use super::ascii_processor::AsciiProcessor;
 
-pub struct App {
+pub struct CameraEngine {
     frame: String,
     exit: bool,
     camera: VideoCapture,
@@ -16,11 +16,11 @@ pub struct App {
     last_update: Instant,
 }
 
-impl App {
+impl CameraEngine {
     pub fn new() -> io::Result<Self> {
         let camera = VideoCapture::new(0, videoio::CAP_ANY)
             .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-        let ascii_processor = AsciiProcessor::new(80, 40); 
+        let ascii_processor = AsciiProcessor::new(80, 40);
 
         Ok(Self {
             frame: String::new(),

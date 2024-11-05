@@ -7,7 +7,7 @@ mod view;
 fn main() -> io::Result<()> {
     enable_raw_mode()?;
     let mut terminal = ratatui::init();
-    let app_result = App::run(&mut terminal);
+    let app_result = App::default().run(&mut terminal);
 
     ratatui::restore();
     disable_raw_mode()?;

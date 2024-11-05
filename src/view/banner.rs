@@ -13,7 +13,9 @@ use ratatui::{
     DefaultTerminal, Frame,
 };
 
-use crate::app::camera_engine::CameraEngine;
+use crate::app::{app::{App, AppState}, camera_engine::CameraEngine};
+
+use super::user_forms::UserForms;
 
 #[derive(Debug, Default)]
 pub struct Banner {
@@ -21,11 +23,12 @@ pub struct Banner {
 }
 
 impl Banner {
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+    pub fn run(&mut self, app: &mut App, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
-            self.handle_events(terminal)?;
+            self.handle_events(app, terminal)?;
         }
+
         Ok(())
     }
 
@@ -33,10 +36,10 @@ impl Banner {
         frame.render_widget(self, frame.area());
     }
 
-    fn handle_events(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+    fn handle_events(&mut self, app: &mut App, terminal: &mut DefaultTerminal) -> io::Result<()> {
         if let Event::Key(key_event) = event::read()? {
             if key_event.kind == KeyEventKind::Press {
-                self.handle_key_event(key_event, terminal)?;
+                self.handle_key_event(app, key_event, terminal)?;
             }
         }
         Ok(())
@@ -44,16 +47,20 @@ impl Banner {
 
     fn handle_key_event(
         &mut self,
+        app: &mut App,
         key_event: KeyEvent,
         terminal: &mut DefaultTerminal,
     ) -> io::Result<()> {
         match key_event.code {
             KeyCode::Char('q') => Ok(self.exit()),
-            KeyCode::Char('e') => Ok(()),
+            KeyCode::Char('e') => {
+                app.state = AppState::EDITING;
+                UserForms::default().run(app, terminal)
+            },
             KeyCode::Char('r') => {
-                let mut app = CameraEngine::new().unwrap();
+                let mut camera_engine = CameraEngine::new().unwrap();
 
-                app.start_app(terminal)
+                camera_engine.start_app(terminal)
             }
             _ => Ok(()),
         }
@@ -95,8 +102,8 @@ const BANNER: &str = "
 ██╔══██╗██║   ██║██║   ██║██║╚██╔╝██║
 ██║  ██║╚██████╔╝╚██████╔╝██║ ╚═╝ ██║
 ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝
-                                     
 
-Welcome to room, here you can chat and see your friends 
+
+Welcome to room, here you can chat and see your friends
 without leaving the terminal!
 ";

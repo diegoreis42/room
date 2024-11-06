@@ -15,6 +15,6 @@ The following list aims to address some desired features:
 - [] Accepting audio streams and share it through TCP.
 - [] Beautiful and easy TUI
 
-With this five points addresseds a `0.1` version could be released and became available
-to use.
+
+With this five points addresseds, a `0.1` version could be released and became available to use.
 

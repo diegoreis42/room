@@ -9,12 +9,12 @@ you can chat and see your friends without leaving your terminal!
 This project is in his very beginning and it don't have many features implemented yet.
 The following list aims to address some desired features:
 
-- [] Efficient ASCII image processing;
-- [] ASCII processing integrated with ratatui;
+- [x] Efficient ASCII image processing;
+- [x] ASCII processing integrated with ratatui;
 - [] TCP ~or UDP~ server to share data;
-- [] Accepting audio streams and share it through TCP. 
+- [] Accepting audio streams and share it through TCP.
 - [] Beautiful and easy TUI
 
-With this five points addreseds a `0.1` version could be released and became available 
+With this five points addresseds a `0.1` version could be released and became available
 to use.
 

@@ -6,11 +6,11 @@ use std::{
     time::{Duration, Instant},
 };
 
-use super::ascii_processor::AsciiProcessor;
+use super::{app::AppState, ascii_processor::AsciiProcessor};
 
 pub struct CameraEngine {
     frame: String,
-    exit: bool,
+    app_state: AppState,
     camera: VideoCapture,
     ascii_processor: AsciiProcessor,
     last_update: Instant,
@@ -24,16 +24,16 @@ impl CameraEngine {
 
         Ok(Self {
             frame: String::new(),
-            exit: false,
+            app_state: AppState::RUNNING,
             camera,
             ascii_processor,
             last_update: Instant::now(),
         })
     }
 
-    pub fn start_app(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+    pub fn start_app(&mut self, terminal: &mut DefaultTerminal) -> io::Result<AppState> {
         terminal.clear()?;
-        while !self.exit {
+        while self.app_state == AppState::RUNNING {
             if self.last_update.elapsed() >= Duration::from_millis(33) {
                 self.update_frame()?;
                 self.last_update = Instant::now();
@@ -42,10 +42,11 @@ impl CameraEngine {
             terminal.draw(|frame| self.draw(frame))?;
 
             if event::poll(Duration::from_millis(1))? {
-                self.handle_event()?;
+                self.app_state = self.handle_event()?;
             }
         }
-        Ok(())
+
+        Ok(self.app_state.clone())
     }
 
     fn update_frame(&mut self) -> io::Result<()> {
@@ -61,12 +62,13 @@ impl CameraEngine {
         frame.render_widget(paragraph, frame.area());
     }
 
-    fn handle_event(&mut self) -> io::Result<()> {
+    fn handle_event(&self) -> io::Result<AppState> {
         if let Event::Key(key) = event::read()? {
             if key.code == KeyCode::Char('q') {
-                self.exit = true;
+                return Ok(AppState::IDLE);
             }
         }
-        Ok(())
+
+        Ok(AppState::RUNNING)
     }
 }

@@ -1,109 +1,95 @@
-use std::io;
+    use std::io;
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::{
-    buffer::Buffer,
-    layout::{Alignment, Rect},
-    symbols::border,
-    text::Line,
-    widgets::{
-        block::{Position, Title},
-        Block, Paragraph, Widget,
-    },
-    DefaultTerminal, Frame,
-};
+    use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+    use ratatui::{
+        buffer::Buffer,
+        layout::{Alignment, Rect},
+        symbols::border,
+        text::Line,
+        widgets::{
+            block::{Position, Title},
+            Block, Paragraph, Widget,
+        },
+        DefaultTerminal, Frame,
+    };
 
-use crate::app::{app::{App, AppState}, camera_engine::CameraEngine};
+    use crate::app::app::AppState;
 
-use super::user_forms::UserForms;
+    #[derive(Default)]
+    pub struct Banner {
+        state: AppState,
+    }
 
-#[derive(Debug, Default)]
-pub struct Banner {
-    exit: bool,
-}
+    impl Banner {
+        pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<AppState> {
+            while self.state == AppState::IDLE {
+                terminal.draw(|frame| self.draw(frame))?;
+                self.state = self.handle_events()?;
+            }
 
-impl Banner {
-    pub fn run(&mut self, app: &mut App, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        while !self.exit {
-            terminal.draw(|frame| self.draw(frame))?;
-            self.handle_events(app, terminal)?;
+            Ok(self.state.clone())
         }
 
-        Ok(())
-    }
+        fn draw(&self, frame: &mut Frame) {
+            frame.render_widget(self, frame.area());
+        }
 
-    fn draw(&self, frame: &mut Frame) {
-        frame.render_widget(self, frame.area());
-    }
+        fn handle_events(&self) -> io::Result<AppState> {
+            if let Event::Key(key_event) = event::read()? {
+                if key_event.kind == KeyEventKind::Press {
+                    return Ok(self.handle_key_event(key_event));
+                }
+            }
 
-    fn handle_events(&mut self, app: &mut App, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        if let Event::Key(key_event) = event::read()? {
-            if key_event.kind == KeyEventKind::Press {
-                self.handle_key_event(app, key_event, terminal)?;
+            Ok(AppState::IDLE)
+        }
+
+        fn handle_key_event(
+            &self,
+            key_event: KeyEvent,
+        ) -> AppState {
+            match key_event.code {
+                KeyCode::Char('q') => AppState::DOWN,
+                KeyCode::Char('e') => AppState::EDITING,
+                KeyCode::Char('r') => AppState::RUNNING,
+                _ => AppState::IDLE,
             }
         }
-        Ok(())
     }
 
-    fn handle_key_event(
-        &mut self,
-        app: &mut App,
-        key_event: KeyEvent,
-        terminal: &mut DefaultTerminal,
-    ) -> io::Result<()> {
-        match key_event.code {
-            KeyCode::Char('q') => Ok(self.exit()),
-            KeyCode::Char('e') => {
-                app.state = AppState::EDITING;
-                UserForms::default().run(app, terminal)
-            },
-            KeyCode::Char('r') => {
-                let mut camera_engine = CameraEngine::new().unwrap();
+    impl Widget for &Banner {
+        fn render(self, area: Rect, buf: &mut Buffer) {
+            let instructions = Title::from(Line::from(vec![
+                " (Q)uit ".into(),
+                " (R)un ".into(),
+                " (E)dit ".into(),
+            ]));
 
-                camera_engine.start_app(terminal)
-            }
-            _ => Ok(()),
+            let block = Block::bordered()
+                .title(
+                    instructions
+                        .alignment(Alignment::Center)
+                        .position(Position::Bottom),
+                )
+                .border_set(border::THICK);
+
+            Paragraph::new(BANNER.to_string())
+                .centered()
+                .block(block)
+                .render(area, buf);
         }
     }
 
-    fn exit(&mut self) {
-        self.exit = true;
-    }
-}
+    const BANNER: &str = "
 
-impl Widget for &Banner {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let instructions = Title::from(Line::from(vec![
-            " (Q)uit ".into(),
-            " (R)un ".into(),
-            " (E)dit ".into(),
-        ]));
-
-        let block = Block::bordered()
-            .title(
-                instructions
-                    .alignment(Alignment::Center)
-                    .position(Position::Bottom),
-            )
-            .border_set(border::THICK);
-
-        Paragraph::new(BANNER.to_string())
-            .centered()
-            .block(block)
-            .render(area, buf);
-    }
-}
-
-const BANNER: &str = "
-
-██████╗  ██████╗  ██████╗ ███╗   ███╗
-██╔══██╗██╔═══██╗██╔═══██╗████╗ ████║
-██████╔╝██║   ██║██║   ██║██╔████╔██║
-██╔══██╗██║   ██║██║   ██║██║╚██╔╝██║
-██║  ██║╚██████╔╝╚██████╔╝██║ ╚═╝ ██║
-╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝
+    ██████╗  ██████╗  ██████╗ ███╗   ███╗
+    ██╔══██╗██╔═══██╗██╔═══██╗████╗ ████║
+    ██████╔╝██║   ██║██║   ██║██╔████╔██║
+    ██╔══██╗██║   ██║██║   ██║██║╚██╔╝██║
+    ██║  ██║╚██████╔╝╚██████╔╝██║ ╚═╝ ██║
+    ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝     ╚═╝
 
 
-Welcome to room, here you can chat and see your friends
-without leaving the terminal!
-";
+    Welcome to room, here you can chat and see your friends
+    without leaving the terminal!
+    ";

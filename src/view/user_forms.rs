@@ -1,8 +1,5 @@
-use std::{
-  io,
-  time::{Duration},
-};
-use crossterm::event::{self, Event, KeyCode};
+use std::io;
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 
 use ratatui::{
   DefaultTerminal,
@@ -11,35 +8,40 @@ use ratatui::{
   widgets::{Block, Borders},
 };
 
-use crate::app::app::{App, AppState};
+use crate::app::app::AppState;
 
 use super::utils::centered_rect;
 
-#[derive(Default)]
-pub struct UserForms {}
-
-impl UserForms {
-  pub fn run(&mut self, app: &mut App, terminal: &mut DefaultTerminal) -> io::Result<()> {
-
-
-      while app.state == AppState::EDITING  {
-          terminal.draw(|frame| self.draw(frame))?;
-
-          if event::poll(Duration::from_millis(1))? {
-            self.handle_event(app)?;
-        }
-        }
-
-      Ok(())
+pub struct UserForms {
+  state: AppState,
 }
 
-fn handle_event(&mut self, app: &mut App) -> io::Result<()> {
-  if let Event::Key(key) = event::read()? {
-      if key.code == KeyCode::Char('q') {
-          app.state = AppState::IDLE;
+impl UserForms {
+  pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<AppState> {
+
+      while self.state == AppState::EDITING  {
+          terminal.draw(|frame| self.draw(frame))?;
+          self.state = self.handle_events()?;
+      }
+
+      Ok(self.state.clone())
+}
+
+fn handle_events(&mut self) -> io::Result<AppState> {
+  if let Event::Key(key_event) = event::read()? {
+      if key_event.kind == KeyEventKind::Press {
+          return Ok(self.handle_key_event(key_event));
       }
   }
-  Ok(())
+
+  Ok(AppState::EDITING)
+}
+
+fn handle_key_event(&mut self, key_event: KeyEvent) -> AppState {
+      match key_event.code {
+          KeyCode::Char('q') => AppState::IDLE,
+          _ => AppState::EDITING,
+      }
 }
   fn draw(&self, frame: &mut Frame) {
     let popup_block = Block::default()
@@ -49,5 +51,13 @@ fn handle_event(&mut self, app: &mut App) -> io::Result<()> {
 
     let area = centered_rect(60, 25, frame.area());
     frame.render_widget(popup_block, area);
+  }
+ }
+
+impl Default for UserForms {
+  fn default() -> Self {
+      Self {
+          state: AppState::EDITING,
+      }
   }
 }

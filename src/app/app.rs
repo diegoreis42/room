@@ -2,7 +2,9 @@ use std::io;
 
 use ratatui::DefaultTerminal;
 
-use crate::view::banner::Banner;
+use crate::view::{banner::Banner, user_forms::UserForms};
+
+use super::camera_engine::CameraEngine;
 
 #[derive(Default)]
 pub struct App {
@@ -11,18 +13,43 @@ pub struct App {
 
 impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        if let Err(e) = Banner::default().run(self, terminal) {
-            println!("A error occurred when drawing the banner, {}", e);
+        loop {
+            match self.state {
+                AppState::IDLE => self.show_banner(terminal)?,
+                AppState::EDITING => self.run_user_forms(terminal)?,
+                AppState::RUNNING => self.run_camera_engine(terminal)?,
+                AppState::DOWN => break,
+            }
         }
 
         Ok(())
     }
+
+    fn show_banner(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        let new_state = Banner::default().run(terminal)?;
+        self.state = new_state;
+        Ok(())
+    }
+
+    fn run_user_forms(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        let new_state = UserForms::default().run(terminal)?;
+        self.state = new_state;
+        Ok(())
+    }
+
+    fn run_camera_engine(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+        let new_state = CameraEngine::new()?.start_app(terminal)?;
+        self.state = new_state;
+        Ok(())
+    }
 }
-#[derive(PartialEq)]
+
+#[derive(PartialEq, Debug, Clone)]
 pub enum AppState {
     EDITING,
     RUNNING,
-    IDLE
+    IDLE,
+    DOWN,
 }
 
 impl Default for AppState {
